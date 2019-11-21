@@ -1,0 +1,1 @@
+{"virtualbox":{"bootstrap":{"create":true,"owner":null,"group":null,"nfs":false,"transient":false,"extra":null,"id":"bootstrap","guestpath":"/mnt/bootstrap","hostpath":"C:/Users/Gustav Willig/Dropbox/Master/Javascript/todo","disabled":false,"__vagrantfile":true}}}

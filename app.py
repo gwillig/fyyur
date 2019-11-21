@@ -12,6 +12,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from flask_migrate import Migrate
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -20,9 +21,20 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
+migrate=Migrate(app,db)
 
 # TODO: connect to a local postgresql database
 
+#----------------------------------------------------------------------------#
+# Own Notes.
+"""
+Description                         | Cmd
+to login as the right user for psql | PGUSER=test PGPASSWORD=test psql -h localhost test
+Give all right to role              | GRANT ALL PRIVILEGES ON database todoapp to test;
+adds temporary git\bit to path      | "c:\Program Files\Git\bin\sh.exe" --login
+
+PGUSER=test PGPASSWORD=test psql -h localhost todoapp
+"""
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
@@ -512,11 +524,5 @@ if not app.debug:
 
 # Default port:
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port="5000",debug=True)
 
-# Or specify port manually:
-'''
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
-'''

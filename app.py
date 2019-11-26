@@ -12,6 +12,7 @@ PGUSER=test PGPASSWORD=test psql -h localhost todoapp
 # Imports
 # ----------------------------------------------------------------------------#
 import dateutil.parser
+from datetime import datetime
 import json
 from sqlalchemy import func
 import dateutil.parser
@@ -73,25 +74,26 @@ class Venue(db.Model):
     def past_shows(self):
         # todo Replace with real function
         current_time = datetime.now()
-        query_past_shows = db.session.query(Show).filter(Show.start_time >= current_time).filter_by(
-            venue_id=self.id).all()
-        past_shows_count = db.session.query(Show).filter(Show.start_time >= current_time).filter_by(
+        baseQuery = db.session.query(Show).filter(Show.start_time <= current_time)
+        query_past_shows = baseQuery.filter_by(venue_id=self.id).all()
+        past_shows_count = baseQuery.filter_by(
             venue_id=self.id).count()
         all_events = db.session.query(Show)
         return {"past_shows": query_past_shows,
-                "num": past_shows_count,
+                "past_shows_count": past_shows_count,
                 }
 
     @property
     def upcoming_shows(self):
         # todo Replace with real function
         current_time = datetime.now()
-        query_upcoming_shows = db.session.query(Show).filter(Show.start_time >= current_time).filter_by(
+        baseQuery = db.session.query(Show).filter(Show.start_time >= current_time)
+        query_upcoming_shows = baseQuery.filter_by(
             venue_id=self.id).all()
-        upcoming_shows_count = db.session.query(Show).filter(Show.start_time >= current_time).filter_by(
+        upcoming_shows_count = baseQuery.filter_by(
             venue_id=self.id).count()
         return {"upcoming_shows": query_upcoming_shows,
-                "num": upcoming_shows_count
+                "upcoming_shows_count": upcoming_shows_count
                 }
 
 
@@ -177,13 +179,13 @@ def load_data():
         "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
         "facebook_link": "https://www.facebook.com/TheMusicalHop",
         "website": "https://www.themusicalhop.com",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
+        "genres": 'Jazz,Reggae,Swing,Classical,Folk',
         "seeking_talent": True,
         "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us."
     }
     venue2 = {
         "name": "The Dueling Pianos Bar",
-        "genres": ["Classical", "R&B", "Hip-Hop"],
+        "genres": 'Classical, R&B, Hip-Hop',
         "address": "335 Delancey Street",
         "city": "New York",
         "state": "NY",
@@ -195,7 +197,7 @@ def load_data():
     }
     venue3 = {
         "name": "Park Square Live Music & Coffee",
-        "genres": ["Rock n Roll", "Jazz", "Classical", "Folk"],
+        "genres": 'Rock n Roll, Jazz, Classical, Folk',
         "address": "34 Whiskey Moore Ave",
         "city": "San Francisco",
         "state": "CA",
@@ -280,19 +282,23 @@ def load_data():
     db.session.add_all(s_list)
     db.session.commit()
 
-
+load_data()
 #####################
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
+  print("hello")
+  if type(value)!=str:
+    date=value
+  else:
     date = dateutil.parser.parse(value)
-    if format == 'full':
-        format = "EEEE MMMM, d, y 'at' h:mma"
-    elif format == 'medium':
-        format = "EE MM, dd, y h:mma"
-    return babel.dates.format_datetime(date, format)
+  if format == 'full':
+      format = "%Y-%m-%d  at %H:%M"
+  elif format == 'medium':
+      format = "%Y-%m-%d  at %H:%M"
+  return date.strftime(format)
 
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -330,7 +336,7 @@ def venues():
             venue_dict["id"] = single_venue[1]
             venue_dict["name"] = single_venue[0]
             venue_dict["num_upcoming_shows"] = \
-            db.session.query(Venue).filter_by(id=single_venue[1]).first().upcoming_shows["num"]
+            db.session.query(Venue).filter_by(id=single_venue[1]).first().upcoming_shows["upcoming_shows_count"]
             v_result["venues"].append(venue_dict)
         result.append(v_result)
 
@@ -364,14 +370,26 @@ def search_venues():
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
+    # print(request.data)
+    venue = db.session.query(Venue).filter_by(id=venue_id).first()
+    venue_dict = venue.__dict__
+    venue_dict["genres"] = venue_dict["genres"].split(",")
+    venue_dict["past_shows"]=[]
+    #Get all the artist from past_shows
+    for past_show in venue.past_shows["past_shows"]:
+        venue_dict["past_shows"].append(
+            {
+              "start_time":past_show.start_time,
+              "artist_id": past_show.Artist.id,
+              "artist_name": past_show.Artist.name,
+              "artist_image_link": past_show.Artist.image_link,
+            }
+        )
     data1 = {
         "id": 1,
         "name": "The Musical Hop",
         "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
+
         "website": "https://www.themusicalhop.com",
         "facebook_link": "https://www.facebook.com/TheMusicalHop",
         "seeking_talent": True,
@@ -441,8 +459,8 @@ def show_venue(venue_id):
         "past_shows_count": 1,
         "upcoming_shows_count": 1,
     }
-    data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
-    return render_template('pages/show_venue.html', venue=data)
+    # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
+    return render_template('pages/show_venue.html', venue=venue_dict)
 
 
 #  Create Venue

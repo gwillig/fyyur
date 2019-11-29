@@ -72,12 +72,10 @@ class Venue(db.Model):
 
     @property
     def past_shows(self):
-        # todo Replace with real function
         current_time = datetime.now()
         baseQuery = db.session.query(Show).filter(Show.start_time <= current_time)
         query_past_shows = baseQuery.filter_by(venue_id=self.id).all()
-        past_shows_count = baseQuery.filter_by(
-            venue_id=self.id).count()
+        past_shows_count = baseQuery.filter_by(venue_id=self.id).count()
         all_events = db.session.query(Show)
         return {"past_shows": query_past_shows,
                 "past_shows_count": past_shows_count,
@@ -85,13 +83,10 @@ class Venue(db.Model):
 
     @property
     def upcoming_shows(self):
-        # todo Replace with real function
         current_time = datetime.now()
         baseQuery = db.session.query(Show).filter(Show.start_time >= current_time)
-        query_upcoming_shows = baseQuery.filter_by(
-            venue_id=self.id).all()
-        upcoming_shows_count = baseQuery.filter_by(
-            venue_id=self.id).count()
+        query_upcoming_shows = baseQuery.filter_by(venue_id=self.id).all()
+        upcoming_shows_count = baseQuery.filter_by(venue_id=self.id).count()
         return {"upcoming_shows": query_upcoming_shows,
                 "upcoming_shows_count": upcoming_shows_count
                 }
@@ -117,23 +112,19 @@ class Artist(db.Model):
 
     @property
     def past_shows(self):
-        # todo Replace with real function
-        query_past_shows = [[{
-            "venue_id": 1,
-            "venue_name": "The Musical Hop",
-            "venue_image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-            "start_time": "2019-05-21T21:30:00.000Z"
-        }]]
-        past_shows_count = len(query_past_shows)
+        current_time = datetime.now()
+        baseQuery = db.session.query(Show).filter(Show.start_time <= current_time)
+        query_past_shows = baseQuery.filter_by(artist_id=self.id).all()
+        past_shows_count = baseQuery.filter_by(artist_id=self.id).count()
         return {"past_shows": query_past_shows,
-                "past_shows_count": past_shows_count
+                "past_shows_count": past_shows_count,
                 }
-
     @property
     def upcoming_shows(self):
-        # todo Replace with real function
-        query_upcoming_shows = []
-        upcoming_shows_count = len(query_upcoming_shows)
+        current_time = datetime.now()
+        baseQuery = db.session.query(Show).filter(Show.start_time >= current_time)
+        query_upcoming_shows = baseQuery.filter_by(artist_id=self.id).all()
+        upcoming_shows_count = baseQuery.filter_by(artist_id=self.id).count()
         return {"upcoming_shows": query_upcoming_shows,
                 "upcoming_shows_count": upcoming_shows_count
                 }
@@ -318,9 +309,8 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
+    # Done: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
-    current_time = datetime.now()
     db.session.rollback()
     db.metadata.clear()
     city_state = db.session.query(Venue.state, Venue.city).group_by(Venue.state, Venue.city).all()
@@ -438,17 +428,31 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
+    # Done: implement search on artists with partial string search. Ensure it is case-insensitive.
+    # seach for "A" should return "Guns N Petals", "Matt Quevedo", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
-    }
+###############################
+    search_term = request.form['search_term']
+    baseQuery = db.session.query(Artist).filter(Artist.name.like(f'%{search_term}%'))
+    if baseQuery.count()!=0:
+        response = {
+            "count": baseQuery.count(),
+            "data": [{
+                "id": baseQuery.first().id,
+                "name": baseQuery.first().name,
+                "num_upcoming_shows": baseQuery.first().upcoming_shows["upcoming_shows_count"],
+            }]
+        }
+    else:
+        #if search was not successfull
+        response = {
+            "count": 0,
+            "data": [{
+                "id": 0,
+                "name": "No hit",
+                "num_upcoming_shows": 0,
+            }]
+        }
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
 

@@ -12,6 +12,7 @@ PGUSER=test PGPASSWORD=test psql -h localhost todoapp
 # Imports
 # ----------------------------------------------------------------------------#
 import dateutil.parser
+import sys
 from datetime import datetime
 import json
 from sqlalchemy import func
@@ -387,29 +388,30 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
-    d = request.form.to_dict()
+    # Done: insert form data as a new Venue record in the db, instead
+    # Done: modify data to be the data object returned from db insertion
+    try:
+        new_venue= {
+            "name": request.form['name'],
+            "city": request.form['city'],
+            "state": request.form['state'],
+            "address": request.form['address'],
+            "phone":  request.form['phone'],
+            "facebook_link": request.form['facebook_link'],
+            "genres": request.form['genres'],
+        }
+        v1 = Venue(**new_venue)
+        db.session.add(v1)
+        db.session.commit()
+        flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    except:
+        db.session.rollback()
+        error=True
+        print(sys.exc_info())
+        flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+    finally:
+        db.session.close()
 
-    new_venue= {
-        "name": request.form['name'],
-        "city": request.form['city'],
-        "state": request.form['state'],
-        "address": request.form['address'],
-        "phone":  request.form['phone'],
-        "facebook_link": request.form['facebook_link'],
-        "genres": request.form['genres'],
-    }
-
-    v1=Venue(**new_venue)
-    db.session.add(v1)
-    db.session.commit()
-    # on successful db insert, flash success
-    flash('Venue ' + request.form['name'] + ' was successfully listed!')
-
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')
 
 

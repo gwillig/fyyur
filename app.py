@@ -429,17 +429,28 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    data = [{
+    # Done: replace with real data returned from querying the database
+    data = []
+    try:
+
+        all_artists = db.session.query(Artist.id,Artist.name).all()
+        for ar in all_artists:
+            data.append(
+                {
+                    "id":ar.id,
+                    'name':ar.name
+                }
+            )
+    except:
+        data.append({
         "id": 4,
-        "name": "Guns N Petals",
-    }, {
-        "id": 5,
-        "name": "Matt Quevedo",
-    }, {
-        "id": 6,
-        "name": "The Wild Sax Band",
-    }]
+        "name": "Error occur. Please contact the admin",
+        })
+        db.session.rollback()
+        error=True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
     return render_template('pages/artists.html', artists=data)
 
 

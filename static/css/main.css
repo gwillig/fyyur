@@ -8,6 +8,18 @@
 /*****************************************************************************
  * Main elements
  ****************************************************************************/
+.venue_li{
+	width:300px;
+}
+.delete_button{
+	 border:none;
+	 background-color:transparent;
+	 float:right;
+}
+.delete_button:hover{
+    color:white;
+    background-color:red;
+}
 html {
   overflow-y: scroll;
 }

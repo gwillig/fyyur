@@ -2,30 +2,31 @@
 {% block title %}Fyyur | Venues{% endblock %}
 {% block content %}
 {% for area in areas %}
-<style>
-	.venue_li{
-	width:300px;
-	}
-	.delete_button{
-	 border:none;
-	 background-color:transparent;
-	 float:right;
-	}
-	.delete_button:hover{
-		color:white;
-		background-color:red;
-	}
-</style>
 <script>
-	function delete_item(this){
-	console.log(this)
+	function delete_item(el){
+	/*
+	@description:
+		Deletes a-tag and sends back a ajax call to database
+	@args:
+		el(HTML-Element)
+	@return:
+		nothing
+	*/
+	let parent = el.closest('li');
+	let venue_id= el.value;
+
+	fetch(`/venues/${venue_id}`,{
+			method: 'DELETE'
+		}
+	).then(function(){parent.remove()})
+
 	}
 </script>
 <h3>{{ area.city }}, {{ area.state }}</h3>
 	<ul class="items">
 		{% for venue in area.venues %}
 		<li class="venue_li">
-	<button class="delete_button" onclick="delete_item(this)">&cross;</button>
+	<button class="delete_button" onclick="delete_item(this)" value='{{ venue.id}}'>&cross;</button>
 			<a  href="/venues/{{ venue.id }}">
 				<i class="fas fa-music"></i>
 

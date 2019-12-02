@@ -66,7 +66,7 @@ class Venue(db.Model):
     genres = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(), nullable=True)
-    show = db.relationship('Show', backref='Venue', lazy=True)
+    show = db.relationship('Show', backref='Venue',cascade="all,delete", lazy=True)
 
     def __repr__(self):
         return f'<{self.id} {self.name}>'
@@ -281,7 +281,6 @@ load_data()
 # ----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-  print("hello")
   if type(value)!=str:
     date=value
   else:
@@ -405,7 +404,6 @@ def create_venue_submission():
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
     except:
         db.session.rollback()
-        error=True
         print(sys.exc_info())
         flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
     finally:
@@ -421,7 +419,20 @@ def delete_venue(venue_id):
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+
+    try:
+        venue_name = db.session.query(Venue).filter_by(id=venue_id).first().name
+        db.session.query(Venue).filter_by(id=venue_id).delete()
+        db.session.commit()
+        print(f'{venue_name} was successfully deleted')
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+
+    return redirect(url_for('venues'))
 
 
 #  Artists
@@ -446,7 +457,6 @@ def artists():
         "name": "Error occur. Please contact the admin",
         })
         db.session.rollback()
-        error=True
         print(sys.exc_info())
     finally:
         db.session.close()

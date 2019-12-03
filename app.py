@@ -211,7 +211,7 @@ def load_data():
         "city": "San Francisco",
         "state": "CA",
         "phone": "326-123-5000",
-        "genres": ["Rock n Roll"],
+        "genres": "Rock n Roll",
         "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
         "facebook_link": "https://www.facebook.com/GunsNPetals",
         "website": "https://www.gunsnpetalsband.com",
@@ -220,7 +220,7 @@ def load_data():
     }
     artist2 = {
         "name": "Matt Quevedo",
-        "genres": ["Jazz"],
+        "genres": "Jazz",
         "city": "New York",
         "state": "NY",
         "phone": "300-400-5000",
@@ -230,7 +230,7 @@ def load_data():
     }
     artist3 = {
         "name": "The Wild Sax Band",
-        "genres": ["Jazz", "Classical"],
+        "genres": "Jazz,Classical",
         "city": "San Francisco",
         "state": "CA",
         "phone": "432-325-5432",
@@ -373,7 +373,15 @@ def show_venue(venue_id):
               "artist_image_link": past_show.Artist.image_link,
             }
         )
-
+    for upcoming_show in venue.upcoming_shows["upcoming_shows"]:
+        venue_dict["upcoming_shows"].append(
+            {
+                "start_time": upcoming_show.start_time,
+                "artist_id": upcoming_show.Artist.id,
+                "artist_name": upcoming_show.Artist.name,
+                "artist_image_link": upcoming_show.Artist.image_link,
+            }
+        )
     return render_template('pages/show_venue.html', venue=venue_dict)
 
 #  Create Venue
@@ -414,7 +422,7 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
+    # Done: Complete this endpoint for taking a venue_id, and using
     # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
@@ -433,7 +441,6 @@ def delete_venue(venue_id):
 
 
     return redirect(url_for('venues'))
-
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -498,79 +505,59 @@ def search_artists():
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
-    data1 = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-        "past_shows": [{
-            "venue_id": 1,
-            "venue_name": "The Musical Hop",
-            "venue_image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-            "start_time": "2019-05-21T21:30:00.000Z"
-        }],
-        "upcoming_shows": [],
-        "past_shows_count": 1,
-        "upcoming_shows_count": 0,
-    }
-    data2 = {
-        "id": 5,
-        "name": "Matt Quevedo",
-        "genres": ["Jazz"],
-        "city": "New York",
-        "state": "NY",
-        "phone": "300-400-5000",
-        "facebook_link": "https://www.facebook.com/mattquevedo923251523",
-        "seeking_venue": False,
-        "image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-        "past_shows": [{
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2019-06-15T23:00:00.000Z"
-        }],
-        "upcoming_shows": [],
-        "past_shows_count": 1,
-        "upcoming_shows_count": 0,
-    }
-    data3 = {
-        "id": 6,
-        "name": "The Wild Sax Band",
-        "genres": ["Jazz", "Classical"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "432-325-5432",
-        "seeking_venue": False,
-        "image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "past_shows": [],
-        "upcoming_shows": [{
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-01T20:00:00.000Z"
-        }, {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-08T20:00:00.000Z"
-        }, {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-            "start_time": "2035-04-15T20:00:00.000Z"
-        }],
-        "past_shows_count": 0,
-        "upcoming_shows_count": 3,
-    }
-    data = list(filter(lambda d: d['id'] == artist_id, [data1, data2, data3]))[0]
-    return render_template('pages/show_artist.html', artist=data)
+    try:
+       artist = db.session.query(Artist).filter_by(id=artist_id).first()
+       artist_dict = artist.__dict__
+       artist_dict["past_shows"] = []
+       artist_dict["upcoming_shows"] = []
+       artist_dict["past_shows_count"] = artist.past_shows['past_shows_count']
+       artist_dict["upcoming_shows_count"] = artist.upcoming_shows['upcoming_shows_count']
+       artist_dict["genres"] = artist_dict["genres"].split(",")
+
+       # Get all the past_shows
+       for past_show in artist.past_shows["past_shows"]:
+           artist_dict["past_shows"].append(
+               {
+                   "start_time": past_show.start_time,
+                   "artist_id": past_show.Artist.id,
+                   "artist_name": past_show.Artist.name,
+                   "artist_image_link": past_show.Artist.image_link,
+               }
+           )
+       for upcoming_shows in artist.upcoming_shows["upcoming_shows"]:
+           artist_dict["upcoming_shows"].append(
+               {
+                   "start_time": upcoming_shows.start_time,
+                   "artist_id": upcoming_shows.Artist.id,
+                   "artist_name": upcoming_shows.Artist.name,
+                   "artist_image_link": upcoming_shows.Artist.image_link,
+               }
+           )
+
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+        artist_dict = {
+            "id": 4,
+            "name": "Error occur. Please contact admin",
+            "genres": [],
+            "city": "",
+            "state": "",
+            "phone": "",
+            "website": "",
+            "facebook_link": "",
+            "seeking_venue": True,
+            "seeking_description": "",
+            "image_link": "",
+            "past_shows": [],
+            "upcoming_shows": [],
+            "past_shows_count": 0,
+            "upcoming_shows_count": 0,
+        }
+    finally:
+        db.session.close()
+
+    return render_template('pages/show_artist.html', artist=artist_dict)
 
 
 #  Update

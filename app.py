@@ -504,7 +504,7 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
+    # Done: replace with real venue data from the venues table, using venue_id
     try:
        artist = db.session.query(Artist).filter_by(id=artist_id).first()
        artist_dict = artist.__dict__
@@ -564,35 +564,57 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+
+    artist = db.session.query(Artist).filter_by(id=artist_id).first()
     form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
+    form.name.data = artist.name
+    form.image_link.data = artist.image_link
+    form.phone.data = artist.phone
+    form.state.data = artist.state
+    form.city.data = artist.city
+    form.facebook_link.data = artist.facebook_link
+    form.genres.data = artist.genres.split(",")
+
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
 
+    try:
+        form = ArtistForm(request.form)
+        artist = db.session.query(Artist).filter_by(id=artist_id).first()
+        artist.name = form.name.data
+        artist.name = form.name.data
+        artist.image_link = form.image_link.data
+        artist.phone = form.phone.data
+        artist.state = form.state.data
+        artist.city = form.city.data
+        artist.facebook_link = form.facebook_link.data
+        artist.genres = ",".join(form.genres.data)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        db.session.close()
+        return render_template('errors/404.html'), 404
+    finally:
+        db.session.close()
     return redirect(url_for('show_artist', artist_id=artist_id))
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     form = VenueForm()
+    venue = db.session.query(Venue).filter_by(id=venue_id).first()
+    form.name.data = venue.name
+    form.image_link.data = venue.image_link
+    form.phone.data = venue.phone
+    form.state.data = venue.state
+    form.city.data = venue.city
+    form.address.data = venue.address
+    form.facebook_link.data = venue.facebook_link
+    form.genres.data = venue.genres.split(",")
+    venue_dict = venue.__dict__
     venue = {
         "id": 1,
         "name": "The Musical Hop",
@@ -607,14 +629,34 @@ def edit_venue(venue_id):
         "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
         "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
     }
-    # TODO: populate form with values from venue with ID <venue_id>
-    return render_template('forms/edit_venue.html', form=form, venue=venue)
+
+    return render_template('forms/edit_venue.html', form=form, venue=venue_dict)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
     # TODO: take values from the form submitted, and update existing
     # venue record with ID <venue_id> using the new attributes
+    try:
+        form = VenueForm(request.form)
+        venue = db.session.query(Venue).filter_by(id=venue_id).first()
+        venue.name = form.name.data
+        venue.name = form.name.data
+        venue.image_link = form.image_link.data
+        venue.phone = form.phone.data
+        venue.state = form.state.data
+        venue.city = form.city.data
+        venue.facebook_link = form.facebook_link.data
+        venue.genres = ",".join(form.genres.data)
+        venue.address = form.address.data
+        db.session.commit()
+    except:
+        db.session.rollback()
+        db.session.close()
+        return render_template('errors/404.html'), 404
+    finally:
+        db.session.close()
+
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 

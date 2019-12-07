@@ -1,31 +1,12 @@
 from datetime import datetime
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField,ValidationError
+from wtforms.validators import DataRequired, AnyOf, URL,Length
+import re
 
-class ShowForm(Form):
-    artist_id = StringField(
-        'artist_id'
-    )
-    venue_id = StringField(
-        'venue_id'
-    )
-    start_time = DateTimeField(
-        'start_time',
-        validators=[DataRequired()],
-        default= datetime.today()
-    )
 
-class VenueForm(Form):
-    name = StringField(
-        'name', validators=[DataRequired()]
-    )
-    city = StringField(
-        'city', validators=[DataRequired()]
-    )
-    state = SelectField(
-        'state', validators=[DataRequired()],
-        choices=[
+
+choices_state = [
             ('AL', 'AL'),
             ('AK', 'AK'),
             ('AZ', 'AZ'),
@@ -78,20 +59,7 @@ class VenueForm(Form):
             ('WI', 'WI'),
             ('WY', 'WY'),
         ]
-    )
-    address = StringField(
-        'address', validators=[DataRequired()]
-    )
-    phone = StringField(
-        'phone'
-    )
-    image_link = StringField(
-        'image_link'
-    )
-    genres = SelectMultipleField(
-        # TODO implement enum restriction
-        'genres', validators=[DataRequired()],
-        choices=[
+choices_genres = [
             ('Alternative', 'Alternative'),
             ('Blues', 'Blues'),
             ('Classical', 'Classical'),
@@ -112,6 +80,51 @@ class VenueForm(Form):
             ('Soul', 'Soul'),
             ('Other', 'Other'),
         ]
+
+class ShowForm(Form):
+    artist_id = StringField(
+        'artist_id'
+    )
+    venue_id = StringField(
+        'venue_id'
+    )
+    start_time = DateTimeField(
+        'start_time',
+        validators=[DataRequired()],
+        default= datetime.today()
+    )
+__all__ = (
+
+
+    'length', 'NumberRange', 'number_range', 'Optional', 'optional',
+    'Required', 'required', 'Regexp', 'regexp', 'URL', 'url', 'AnyOf',
+    'any_of', 'NoneOf', 'none_of', 'MacAddress', 'mac_address', 'UUID',
+    'ValidationError', 'StopValidation'
+)
+class VenueForm(Form):
+    name = StringField(
+        'name', validators=[DataRequired()]
+    )
+    city = StringField(
+        'city', validators=[DataRequired()]
+    )
+    state = SelectField(
+        'state', validators=[DataRequired()],
+        choices=choices_state
+    )
+    address = StringField(
+        'address', validators=[DataRequired()]
+    )
+    phone = StringField(
+        'phone'
+    )
+    image_link = StringField(
+        'image_link'
+    )
+    genres = SelectMultipleField(
+        # TODO implement enum restriction
+        'genres', validators=[DataRequired()],
+        choices = choices_genres
     )
     facebook_link = StringField(
         'facebook_link', validators=[URL()]
@@ -181,8 +194,7 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
+        'phone', validators=[DataRequired()]
     )
     image_link = StringField(
         'image_link'
@@ -218,3 +230,45 @@ class ArtistForm(Form):
     )
 
 # TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+class ArtistForm(Form):
+
+    name = StringField(
+        'name', validators=[DataRequired(), Length(max=200)]
+    )
+    city = StringField(
+        'city', validators=[DataRequired(), Length(max=200)]
+    )
+    state = SelectField(
+        'state', validators=[DataRequired()],
+        choices=choices_state
+    )
+    phone = StringField(
+        'phone', validators=[DataRequired()]
+    )
+    image_link = StringField(
+        'image_link'
+    )
+    genres = SelectMultipleField(
+        'genres', validators=[DataRequired()],
+        choices=choices_genres
+    )
+    facebook_link = StringField(
+        'facebook_link', validators=[DataRequired(), URL(), Length(max=200)]
+    )
+
+class ShowForm(Form):
+    artist_id = StringField(
+        'artist_id'
+    )
+    venue_id = StringField(
+        'venue_id'
+    )
+    start_time = DateTimeField(
+        'start_time',
+        validators=[DataRequired()],
+        default = datetime.today()
+    )
+
+    def validate_start_time(form, field):
+        if field.data < datetime.today():
+            raise ValidationError("start_time must not be earlier than today")

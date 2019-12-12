@@ -6,9 +6,6 @@ from flask_migrate import Migrate
 
 db = SQLAlchemy()
 
-
-
-
 class Venue(db.Model):
     __tablename__ = 'venue'
     __table_args__ = {'extend_existing': True}

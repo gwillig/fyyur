@@ -26,6 +26,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from model import *
 from flask_migrate import Migrate
 
 # ----------------------------------------------------------------------------#
@@ -35,130 +36,22 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-# ------------------------------------------
-# import psycopg2
-# conn = psycopg2.connect( 'postgresql://test:test@localhost:15432/test')
-# cur = conn.cursor()
-# cur.execute("Select city,count(city) from Venue GROUP BY city;")
-# print(cur.fetchall())
-# result = cur.fetchall()
-# conn.rollback()
-# Models.
-# ----------------------------------------------------------------------------#
-
-db.metadata.clear()
-
-
-class Venue(db.Model):
-    __tablename__ = 'venue'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, unique=True, nullable=False)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500), nullable=True)
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=False)
-    seeking_description = db.Column(db.String(), nullable=True)
-    show = db.relationship('Show', backref='Venue',cascade="all,delete", lazy=True)
-
-    def __repr__(self):
-        return f'<{self.id} {self.name}>'
-
-    @property
-    def past_shows(self):
-        current_time = datetime.now()
-        baseQuery = db.session.query(Show).filter(Show.start_time <= current_time)
-        query_past_shows = baseQuery.filter_by(venue_id=self.id).all()
-        past_shows_count = baseQuery.filter_by(venue_id=self.id).count()
-        all_events = db.session.query(Show)
-        return {"past_shows": query_past_shows,
-                "past_shows_count": past_shows_count,
-                }
-
-    @property
-    def upcoming_shows(self):
-        current_time = datetime.now()
-        baseQuery = db.session.query(Show).filter(Show.start_time >= current_time)
-        query_upcoming_shows = baseQuery.filter_by(venue_id=self.id).all()
-        upcoming_shows_count = baseQuery.filter_by(venue_id=self.id).count()
-        return {"upcoming_shows": query_upcoming_shows,
-                "upcoming_shows_count": upcoming_shows_count
-                }
-
-
-class Artist(db.Model):
-    __tablename__ = 'artist'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(), unique=True, nullable=False)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean, default=False)
-    seeking_description = db.Column(db.String(), default=False)
-    shows = db.relationship('Show', backref='Artist', lazy=True, )
-
-    def __repr__(self):
-        return f'<{self.id} {self.name}>'
-
-    @property
-    def past_shows(self):
-        current_time = datetime.now()
-        baseQuery = db.session.query(Show).filter(Show.start_time <= current_time)
-        query_past_shows = baseQuery.filter_by(artist_id=self.id).all()
-        past_shows_count = baseQuery.filter_by(artist_id=self.id).count()
-        return {"past_shows": query_past_shows,
-                "past_shows_count": past_shows_count,
-                }
-    @property
-    def upcoming_shows(self):
-        current_time = datetime.now()
-        baseQuery = db.session.query(Show).filter(Show.start_time >= current_time)
-        query_upcoming_shows = baseQuery.filter_by(artist_id=self.id).all()
-        upcoming_shows_count = baseQuery.filter_by(artist_id=self.id).count()
-        return {"upcoming_shows": query_upcoming_shows,
-                "upcoming_shows_count": upcoming_shows_count
-                }
-
-
-db.create_all()
-
-
-class Show(db.Model):
-    __tablename__ = 'show'
-    id = db.Column(db.Integer, primary_key=True)
-    venue_id = db.Column(db.Integer, db.ForeignKey(Venue.id), nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey(Artist.id), nullable=False)
-    start_time = db.Column(db.Date, nullable=False)
-
-    def __repr__(self):
-        return f'<artist_id: {self.artist_id} venue_id: {self.venue_id}>'
-
-
-db.create_all()
-db.session.commit()
-
-
+with app.app_context():
+    db.create_all()
+    db.session.commit()
 ########### Create data if empty
 def load_data():
     def delete_all():
         db.session.rollback()
-        Show.query.delete()
-        Venue.query.delete()
-        Artist.query.delete()
+        db.session.query(Show).delete()
+        db.session.query(Venue).delete()
+        db.session.query(Artist).delete()
         db.session.commit()
 
-    if Venue.query.count() != 0:
+    if db.session.query(Venue).count()!= 0:
         print("Deleted old records")
         delete_all()
 
@@ -245,25 +138,25 @@ def load_data():
     ####################################### Show data
 
     data = [{
-        "venue_id": Venue.query.filter_by(name="The Musical Hop").first().id,
-        "artist_id": Artist.query.filter_by(name="The Wild Sax Band").first().id,
+        "venue_id": db.session.query(Venue).filter_by(name="The Musical Hop").first().id,
+        "artist_id": db.session.query(Artist).filter_by(name="The Wild Sax Band").first().id,
         "start_time": dateutil.parser.parse("2019-05-21T21:30:00.000Z")
     }, {
-        "venue_id": Venue.query.filter_by(name="Park Square Live Music & Coffee").first().id,
-        "artist_id": Artist.query.filter_by(name="Matt Quevedo").first().id,
+        "venue_id":  db.session.query(Venue).filter_by(name="Park Square Live Music & Coffee").first().id,
+        "artist_id":  db.session.query(Artist).filter_by(name="Matt Quevedo").first().id,
         "start_time": dateutil.parser.parse("2019-06-15T23:00:00.000Z")
     }, {
-        "venue_id": Venue.query.filter_by(name="Park Square Live Music & Coffee").first().id,
-        "artist_id": Artist.query.filter_by(name="The Wild Sax Band").first().id,
+        "venue_id":  db.session.query(Venue).filter_by(name="Park Square Live Music & Coffee").first().id,
+        "artist_id":db.session.query(Artist).filter_by(name="The Wild Sax Band").first().id,
         "start_time": dateutil.parser.parse("2035-04-01T20:00:00.000Z")
     }, {
-        "venue_id": Venue.query.filter_by(name="Park Square Live Music & Coffee").first().id,
-        "artist_id": Artist.query.filter_by(name="The Wild Sax Band").first().id,
+        "venue_id": db.session.query(Venue).filter_by(name="Park Square Live Music & Coffee").first().id,
+        "artist_id": db.session.query(Artist).filter_by(name="The Wild Sax Band").first().id,
         "start_time": dateutil.parser.parse("2035-04-08T20:00:00.000Z")
     },
         {
-            "venue_id": Venue.query.filter_by(name="Park Square Live Music & Coffee").first().id,
-            "artist_id": Artist.query.filter_by(name="The Wild Sax Band").first().id,
+            "venue_id": db.session.query(Venue).filter_by(name="Park Square Live Music & Coffee").first().id,
+            "artist_id": db.session.query(Artist).filter_by(name="The Wild Sax Band").first().id,
             "start_time": dateutil.parser.parse("2035-04-15T20:00:00.000Z")
         }
     ]
@@ -275,6 +168,16 @@ def load_data():
     db.session.commit()
 
 load_data()
+# ------------------------------------------
+# import psycopg2
+# conn = psycopg2.connect( 'postgresql://test:test@localhost:15432/test')
+# cur = conn.cursor()
+# cur.execute("Select city,count(city) from Venue GROUP BY city;")
+# print(cur.fetchall())
+# result = cur.fetchall()
+# conn.rollback()
+# Models.
+# ----------------------------------------------------------------------------#
 #####################
 # ----------------------------------------------------------------------------#
 # Filters.
@@ -709,10 +612,10 @@ def shows():
     # displays list of shows at /shows
     # Done: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
-    shows = Show.query.all()
+    all_shows = db.session.query(Show).all()
     data = []
-    for show in shows:
-        data.append[
+    for show in all_shows:
+        data.append(
             {
             "venue_id": show.venue_id,
             "venue_name": show.Venue.name,
@@ -721,7 +624,7 @@ def shows():
             "artist_image_link": show.Artist.image_link,
             "start_time": show.start_time
             }
-        ]
+        )
 
     return render_template('pages/shows.html', shows=data)
 
